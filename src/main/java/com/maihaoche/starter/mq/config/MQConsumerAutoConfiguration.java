@@ -2,20 +2,20 @@ package com.maihaoche.starter.mq.config;
 
 import com.maihaoche.starter.mq.annotation.MQConsumer;
 import com.maihaoche.starter.mq.base.AbstractMQPushConsumer;
+import com.maihaoche.starter.mq.base.ConsumerTagDeal;
 import com.maihaoche.starter.mq.base.MessageExtConst;
 import com.maihaoche.starter.mq.trace.common.OnsTraceConstants;
-import com.maihaoche.starter.mq.trace.dispatch.AsyncAppender;
 import com.maihaoche.starter.mq.trace.dispatch.impl.AsyncTraceAppender;
 import com.maihaoche.starter.mq.trace.dispatch.impl.AsyncTraceDispatcher;
 import com.maihaoche.starter.mq.trace.tracehook.OnsConsumeMessageHookImpl;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.rocketmq.client.consumer.DefaultMQPushConsumer;
-import org.apache.rocketmq.client.consumer.listener.ConsumeConcurrentlyContext;
-import org.apache.rocketmq.client.consumer.listener.ConsumeOrderlyContext;
-import org.apache.rocketmq.client.exception.MQClientException;
-import org.apache.rocketmq.common.message.MessageExt;
-import org.apache.rocketmq.common.protocol.heartbeat.MessageModel;
+import com.alibaba.rocketmq.client.consumer.DefaultMQPushConsumer;
+import com.alibaba.rocketmq.client.consumer.listener.ConsumeConcurrentlyContext;
+import com.alibaba.rocketmq.client.consumer.listener.ConsumeOrderlyContext;
+import com.alibaba.rocketmq.client.exception.MQClientException;
+import com.alibaba.rocketmq.common.message.MessageExt;
+import com.alibaba.rocketmq.common.protocol.heartbeat.MessageModel;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.util.Assert;
@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 /**
  * Created by suclogger on 2017/6/28.
@@ -38,15 +39,26 @@ public class MQConsumerAutoConfiguration extends MQBaseAutoConfiguration {
 
     private AsyncTraceDispatcher asyncTraceDispatcher;
 
+    /***
+     * 操作没有意义，参考https://bbs.aliyun.com/simple/t286100.html
+     * 记得每个jvm进程，只能保证新建一个consumer实例
+     * @throws Exception
+     */
     @PostConstruct
     public void init() throws Exception {
         Map<String, Object> beans = applicationContext.getBeansWithAnnotation(MQConsumer.class);
         if(!CollectionUtils.isEmpty(beans) && mqProperties.getTraceEnabled()) {
             initAsyncAppender();
         }
-        for (Map.Entry<String, Object> entry : beans.entrySet()) {
-            publishConsumer(entry.getKey(), entry.getValue());
-        }
+        Map<String, ConsumerTagDeal> collect = applicationContext.getBeansOfType(ConsumerTagDeal.class).values().stream().collect(Collectors.toMap(i -> i.getTag(), i -> i));
+        beans.entrySet().stream().limit(1).forEach(entry -> {
+            try {
+                publishConsumer(entry.getKey(), entry.getValue(), collect);
+            } catch (MQClientException e) {
+                e.printStackTrace();
+            }
+        });
+
     }
 
     private AsyncTraceDispatcher initAsyncAppender() {
@@ -70,16 +82,16 @@ public class MQConsumerAutoConfiguration extends MQBaseAutoConfiguration {
         return asyncTraceDispatcher;
     }
 
-    private void publishConsumer(String beanName, Object bean) throws Exception {
+    private void publishConsumer(String beanName, Object bean, Map<String, ConsumerTagDeal> collect) throws MQClientException {
         MQConsumer mqConsumer = applicationContext.findAnnotationOnBean(beanName, MQConsumer.class);
         if (StringUtils.isEmpty(mqProperties.getNameServerAddress())) {
             throw new RuntimeException("name server address must be defined");
         }
         Assert.notNull(mqConsumer.consumerGroup(), "consumer's consumerGroup must be defined");
         Assert.notNull(mqConsumer.topic(), "consumer's topic must be defined");
-        if (!AbstractMQPushConsumer.class.isAssignableFrom(bean.getClass())) {
+    /*    if (!AbstractMQPushConsumer.class.isAssignableFrom(bean.getClass())) {
             throw new RuntimeException(bean.getClass().getName() + " - consumer未实现Consumer抽象类");
-        }
+        }*/
 
         String consumerGroup = applicationContext.getEnvironment().getProperty(mqConsumer.consumerGroup());
         if (StringUtils.isEmpty(consumerGroup)) {
@@ -94,11 +106,13 @@ public class MQConsumerAutoConfiguration extends MQBaseAutoConfiguration {
         if (AbstractMQPushConsumer.class.isAssignableFrom(bean.getClass())) {
             DefaultMQPushConsumer consumer = new DefaultMQPushConsumer(consumerGroup);
             consumer.setNamesrvAddr(mqProperties.getNameServerAddress());
+            consumer.setConsumeMessageBatchMaxSize(mqProperties.getConsumeMessageBatchMaxSize());
             consumer.setMessageModel(MessageModel.valueOf(mqConsumer.messageMode()));
-            consumer.subscribe(topic, StringUtils.join(mqConsumer.tag(), "||"));
+            consumer.subscribe(topic, StringUtils.join(collect.keySet(), "||"));
             consumer.setInstanceName(UUID.randomUUID().toString());
             consumer.setVipChannelEnabled(mqProperties.getVipChannelEnabled());
             AbstractMQPushConsumer abstractMQPushConsumer = (AbstractMQPushConsumer) bean;
+            abstractMQPushConsumer.setConsumers(collect);
             if (MessageExtConst.CONSUME_MODE_CONCURRENTLY.equals(mqConsumer.consumeMode())) {
                 consumer.registerMessageListener((List<MessageExt> list, ConsumeConcurrentlyContext consumeConcurrentlyContext) ->
                         abstractMQPushConsumer.dealMessage(list, consumeConcurrentlyContext));

@@ -6,7 +6,7 @@ import com.maihaoche.starter.mq.enums.DelayTimeLevel;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.rocketmq.common.message.Message;
+import com.alibaba.rocketmq.common.message.Message;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;

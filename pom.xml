@@ -6,13 +6,14 @@
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
         <version>1.5.4.RELEASE</version>
-        <relativePath/> <!-- lookup parent from repository -->
+        <relativePath/>
     </parent>
     <modelVersion>4.0.0</modelVersion>
     <properties>
         <java.version>1.8</java.version>
         <jacoco.version>0.7.9</jacoco.version>
         <rocketmq.version>4.2.0</rocketmq.version>
+        <rocketmq.client.version>3.5.9</rocketmq.client.version>
         <file_encoding>UTF-8</file_encoding>
     </properties>
 
@@ -21,36 +22,16 @@
     <description>spring boot starter for rocketmq</description>
     <url>https://github.com/maihaoche/rocketmq-spring-boot-starter</url>
 
-    <licenses>
-        <license>
-            <name>GNU General Public License, Version 3</name>
-            <url>http://www.gnu.org/licenses/gpl-3.0.html</url>
-            <distribution>manual</distribution>
-            <comments>A free, copyleft license for software and other kinds of works</comments>
-        </license>
-    </licenses>
-
-
     <groupId>com.maihaoche</groupId>
     <artifactId>spring-boot-starter-rocketmq</artifactId>
-    <version>0.0.7</version>
-
-    <scm>
-        <url>https://github.com/maihaoche/rocketmq-spring-boot-starter</url>
-        <connection>scm:git:git://github.com/maihaoche/rocketmq-spring-boot-starter.git</connection>
-        <developerConnection>scm:git:git@github.com:maihaoche/rocketmq-spring-boot-starter.git</developerConnection>
-    </scm>
-
-    <developers>
-        <developer>
-            <email>suclogger@gmail.com</email>
-            <name>suclogger</name>
-            <url>https://github.com/suclogger</url>
-            <id>suclogger</id>
-        </developer>
-    </developers>
+    <version>0.1.5</version>
 
     <dependencies>
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-lang3</artifactId>
+            <version>3.7</version>
+        </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter</artifactId>
@@ -68,9 +49,9 @@
             <artifactId>gson</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.apache.rocketmq</groupId>
+            <groupId>com.alibaba.rocketmq</groupId>
             <artifactId>rocketmq-client</artifactId>
-            <version>${rocketmq.version}</version>
+            <version>${rocketmq.client.version}</version>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -93,18 +74,6 @@
             <build>
                 <plugins>
                     <!-- Source -->
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-source-plugin</artifactId>
-                        <executions>
-                            <execution>
-                                <phase>package</phase>
-                                <goals>
-                                    <goal>jar-no-fork</goal>
-                                </goals>
-                            </execution>
-                        </executions>
-                    </plugin>
                     <!-- Javadoc -->
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
@@ -133,24 +102,42 @@
                     </plugin>
                 </plugins>
             </build>
-            <distributionManagement>
-                <snapshotRepository>
-                    <id>oss</id>
-                    <url>https://oss.sonatype.org/content/repositories/snapshots/</url>
-                </snapshotRepository>
-                <repository>
-                    <id>oss</id>
-                    <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
-                </repository>
-            </distributionManagement>
+
         </profile>
     </profiles>
+
+    <distributionManagement>
+        <repository>
+            <id>releases</id>
+            <name>Nexus Release Repository</name>
+            <url>http://192.168.1.82:8081/nexus/content/repositories/releases/</url>
+        </repository>
+        <snapshotRepository>
+            <id>snapshots</id>
+            <name>Nexus Snapshot Repository</name>
+            <url>http://192.168.1.82:8081/nexus/content/repositories/snapshots/</url>
+        </snapshotRepository>
+    </distributionManagement>
     <build>
         <plugins>
             <plugin>
                 <groupId>org.eluder.coveralls</groupId>
                 <artifactId>coveralls-maven-plugin</artifactId>
                 <version>4.3.0</version>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-source-plugin</artifactId>
+                <version>3.0.0</version>
+                <executions>
+                    <execution>
+                        <id>attach-sources</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>jar-no-fork</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
             <plugin>
                 <groupId>org.jacoco</groupId>

@@ -3,7 +3,7 @@ package com.maihaoche.starter.mq.config;
 import com.maihaoche.starter.mq.annotation.MQProducer;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.rocketmq.client.producer.DefaultMQProducer;
+import com.alibaba.rocketmq.client.producer.DefaultMQProducer;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

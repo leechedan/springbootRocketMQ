@@ -3,7 +3,7 @@ package com.maihaoche.starter.mq.base;
 import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.rocketmq.common.message.MessageExt;
+import com.alibaba.rocketmq.common.message.MessageExt;
 import org.springframework.util.Assert;
 
 import java.lang.reflect.ParameterizedType;
@@ -17,31 +17,33 @@ import java.util.Map;
  * Modified By：
  */
 @Slf4j
-public abstract class AbstractMQConsumer<T> {
+public abstract class AbstractMQConsumer {
 
     protected static Gson gson = new Gson();
 
+    /**默认最大重试次数5次*/
+    protected static final int MAX_RETRY_TIMES = 5;
     /**
      * 反序列化解析消息
      *
      * @param message  消息体
      * @return 序列化结果
      */
-    protected T parseMessage(MessageExt message) {
+    protected <T> T parseMessage(MessageExt message, Class<T> clz) {
         if (message == null || message.getBody() == null) {
             return null;
         }
         final Type type = this.getMessageType();
-        if (type instanceof Class) {
+//        if (type instanceof Class) {
             try {
-                T data = gson.fromJson(new String(message.getBody()), type);
-                return data;
+                T t = gson.fromJson(new String(message.getBody()), clz);
+                return t;
             } catch (JsonSyntaxException e) {
                 log.error("parse message json fail : {}", e.getMessage());
             }
-        } else {
-            log.warn("Parse msg error. {}", message);
-        }
+//        } else {
+//            log.warn("Parse msg error. {}", message);
+//        }
         return null;
     }
 
@@ -88,4 +90,16 @@ public abstract class AbstractMQConsumer<T> {
 //            throw new RuntimeException("Unkown parameterized type.");
         }
     }
+
+    protected boolean checkReachMaxRetryTimes(MessageExt messageExt) {
+        log.info("re-consume times: {}" , messageExt.getReconsumeTimes());
+        //大于最大重试次数则记录失败日志，并返回ConsumeOrderlyStatus.SUCCESS
+        if(messageExt.getReconsumeTimes() >= MAX_RETRY_TIMES){
+            log.error("Consumer reach the maximum number of retries,please process by manual work,msgId:{},msgKey:{},tags:{}",messageExt.getMsgId(),messageExt.getKeys(),messageExt.getTags());
+            return true;
+        }
+        return false;
+    }
+
+
 }

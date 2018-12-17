@@ -32,4 +32,5 @@ public class MQProperties {
      */
     private Boolean vipChannelEnabled = Boolean.TRUE;
 
+    private Integer consumeMessageBatchMaxSize = 1;
 }

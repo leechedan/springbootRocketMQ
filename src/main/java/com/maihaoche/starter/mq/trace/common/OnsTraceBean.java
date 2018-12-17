@@ -2,7 +2,7 @@ package com.maihaoche.starter.mq.trace.common;
 
 
 import com.maihaoche.starter.mq.trace.utils.MixUtils;
-import org.apache.rocketmq.common.message.MessageType;
+import com.alibaba.rocketmq.common.message.MessageType;
 
 /**
  * Created by alvin on 16-3-9.

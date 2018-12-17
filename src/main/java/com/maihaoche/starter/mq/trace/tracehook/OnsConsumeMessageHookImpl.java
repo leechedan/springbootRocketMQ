@@ -5,9 +5,9 @@ import com.maihaoche.starter.mq.trace.common.OnsTraceBean;
 import com.maihaoche.starter.mq.trace.common.OnsTraceContext;
 import com.maihaoche.starter.mq.trace.common.OnsTraceType;
 import com.maihaoche.starter.mq.trace.dispatch.AsyncDispatcher;
-import org.apache.rocketmq.client.hook.ConsumeMessageContext;
-import org.apache.rocketmq.client.hook.ConsumeMessageHook;
-import org.apache.rocketmq.common.message.MessageExt;
+import com.alibaba.rocketmq.client.hook.ConsumeMessageContext;
+import com.alibaba.rocketmq.client.hook.ConsumeMessageHook;
+import com.alibaba.rocketmq.common.message.MessageExt;
 
 import java.util.ArrayList;
 import java.util.List;

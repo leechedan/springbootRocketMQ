@@ -3,7 +3,7 @@ package com.maihaoche.starter.mq.trace.dispatch.impl;
 import com.maihaoche.starter.mq.trace.common.OnsTraceConstants;
 import com.maihaoche.starter.mq.trace.dispatch.AsyncAppender;
 import com.maihaoche.starter.mq.trace.dispatch.AsyncDispatcher;
-import org.apache.rocketmq.client.log.ClientLogger;
+import com.alibaba.rocketmq.client.log.ClientLogger;
 import org.slf4j.Logger;
 
 import java.io.IOException;

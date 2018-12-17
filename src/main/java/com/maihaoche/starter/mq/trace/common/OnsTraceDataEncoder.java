@@ -1,7 +1,7 @@
 package com.maihaoche.starter.mq.trace.common;
 
 
-import org.apache.rocketmq.common.message.MessageType;
+import com.alibaba.rocketmq.common.message.MessageType;
 
 import java.util.ArrayList;
 import java.util.List;

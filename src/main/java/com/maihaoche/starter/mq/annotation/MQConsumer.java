@@ -14,7 +14,12 @@ import java.lang.annotation.*;
 @Documented
 @Component
 public @interface MQConsumer {
+
     String consumerGroup();
+
+    /***
+     * 订阅主题
+     * */
     String topic();
 
     /**
@@ -30,5 +35,9 @@ public @interface MQConsumer {
      * @return 消费模式
      */
     String consumeMode() default MessageExtConst.CONSUME_MODE_CONCURRENTLY;
-    String[] tag() default {"*"};
+
+    /***
+     * 废弃
+     * */
+    //    String[] tag() default {"*"};
 }
